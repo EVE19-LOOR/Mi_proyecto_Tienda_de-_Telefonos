@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido | Tienda de Teléfonos{% endblock %}
+
+{% block content %}
+<h1>Realizar Pedido</h1>
+
+<form method="POST">
+  <label>Nombre del cliente:</label><br>
+  <input type="text" name="cliente" required><br><br>
+
+  <label>Teléfono (modelo):</label><br>
+  <input type="text" name="telefono" placeholder="Ej: Redmi Note 13" required><br><br>
+
+  <label>Cantidad:</label><br>
+  <input type="number" name="cantidad" min="1" value="1" required><br><br>
+
+  <button type="submit">Enviar pedido</button>
+</form>
+{% endblock %}
+
