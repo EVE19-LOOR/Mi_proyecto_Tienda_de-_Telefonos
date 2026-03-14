@@ -1,0 +1,4 @@
+aa,aaaaaaaaaaa,0.12,3
+, ,mkjhi,kmoih,0.28,9
+iphone,iphone 15 pro max,500.0,2
+iphone,iphone 15 pro max,800.0,3
