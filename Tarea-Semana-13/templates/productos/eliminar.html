@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block titulo %}Eliminar celular{% endblock %}
+
+{% block contenido %}
+<h2 class="mb-4">Eliminar celular</h2>
+
+<div class="alert alert-danger">
+    ¿Deseas eliminar el celular <strong>{{ producto.nombre }}</strong>?
+</div>
+
+<form method="POST">
+    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+    <a href="{{ url_for('listar_productos_route') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
