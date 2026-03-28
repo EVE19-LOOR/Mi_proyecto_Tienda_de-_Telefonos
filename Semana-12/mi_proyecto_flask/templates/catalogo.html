@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo | Tienda de Teléfonos{% endblock %}
+
+{% block content %}
+<h1>Catálogo de Teléfonos</h1>
+<p>Modelos disponibles en nuestra tienda.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Marca</th>
+      <th>Modelo</th>
+      <th>Precio (USD)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in telefonos %}
+    <tr>
+      <td>{{ t.marca }}</td>
+      <td>{{ t.modelo }}</td>
+      <td>${{ t.precio }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

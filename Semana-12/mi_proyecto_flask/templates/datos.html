@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Datos TXT</h2>
+<ul>
+{% for d in datos_txt %}
+<li>{{ d }}</li>
+{% endfor %}
+</ul>
+
+<h2>Datos JSON</h2>
+<ul>
+{% for d in datos_json %}
+<li>{{ d.nombre }} - {{ d.marca }}</li>
+{% endfor %}
+</ul>
+
+<h2>Datos CSV</h2>
+<ul>
+{% for d in datos_csv %}
+<li>{{ d.nombre }} - {{ d.marca }}</li>
+{% endfor %}
+</ul>
+
+<h2>Datos SQLite</h2>
+<ul>
+{% for d in datos_db %}
+<li>{{ d.nombre }} - {{ d.marca }}</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

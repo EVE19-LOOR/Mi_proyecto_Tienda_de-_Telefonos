@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario | Tienda de Teléfonos{% endblock %}
+
+{% block content %}
+<h1>Inventario</h1>
+
+<p>Total productos: {{ resumen[0] }} | Total unidades: {{ resumen[1] }}</p>
+
+<form method="GET" action="{{ url_for('inventario_list') }}">
+  <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre">
+  <button type="submit">Buscar</button>
+  <a href="{{ url_for('inventario_new') }}">Nuevo producto</a>
+</form>
+
+<br>
+
+<table border="1" cellpadding="6">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Marca</th>
+      <th>Modelo</th>
+      <th>Categoría</th>
+      <th>Cantidad</th>
+      <th>Precio</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in productos %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td>{{ p.nombre }}</td>
+      <td>{{ p.marca }}</td>
+      <td>{{ p.modelo }}</td>
+      <td>{{ p.categoria }}</td>
+      <td>{{ p.cantidad }}</td>
+      <td>${{ '%.2f'|format(p.precio) }}</td>
+      <td>
+        <a href="{{ url_for('inventario_edit', pid=p.id) }}">Editar</a>
+        <form method="POST" action="{{ url_for('inventario_delete', pid=p.id) }}" style="display:inline;">
+          <button type="submit" onclick="return confirm('¿Eliminar este producto?')">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

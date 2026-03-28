@@ -1,0 +1,26 @@
+[
+    {
+        "nombre": "aa",
+        "marca": "aaaaaaaaaaa",
+        "precio": 0.12,
+        "cantidad": 3
+    },
+    {
+        "nombre": ", ,mkjhi",
+        "marca": "kmoih",
+        "precio": 0.28,
+        "cantidad": 9
+    },
+    {
+        "nombre": "iphone",
+        "marca": "iphone 15 pro max",
+        "precio": 500.0,
+        "cantidad": 2
+    },
+    {
+        "nombre": "iphone",
+        "marca": "iphone 15 pro max",
+        "precio": 800.0,
+        "cantidad": 3
+    }
+]
