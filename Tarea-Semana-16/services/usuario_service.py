@@ -1,40 +1,43 @@
 from conexion.conexion import obtener_conexion
 
-def validar_usuario(correo, clave):
+def registrar_usuario(nombre, usuario, clave):
     conexion = obtener_conexion()
-    cursor = conexion.cursor(dictionary=True)
+    if conexion is None:
+        return False, "No se pudo conectar con la base de datos"
 
-    sql = "SELECT * FROM usuarios WHERE correo = %s AND clave = %s"
-    cursor.execute(sql, (correo, clave))
-    usuario = cursor.fetchone()
+    try:
+        cursor = conexion.cursor()
+        sql = """
+        INSERT INTO usuarios (nombre, usuario, clave)
+        VALUES (%s, %s, %s)
+        """
+        cursor.execute(sql, (nombre, usuario, clave))
+        conexion.commit()
+        return True, "Usuario registrado correctamente"
+    except Exception as e:
+        conexion.rollback()
+        return False, f"Error al registrar usuario: {e}"
+    finally:
+        cursor.close()
+        conexion.close()
 
-    cursor.close()
-    conexion.close()
 
-    return usuario
-
-
-def existe_correo(correo):
+def validar_usuario(usuario, clave):
     conexion = obtener_conexion()
-    cursor = conexion.cursor(dictionary=True)
+    if conexion is None:
+        return None
 
-    sql = "SELECT * FROM usuarios WHERE correo = %s"
-    cursor.execute(sql, (correo,))
-    usuario = cursor.fetchone()
-
-    cursor.close()
-    conexion.close()
-
-    return usuario
-
-
-def registrar_usuario(nombre, correo, clave):
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
-
-    sql = "INSERT INTO usuarios (nombre, correo, clave) VALUES (%s, %s, %s)"
-    cursor.execute(sql, (nombre, correo, clave))
-
-    conexion.commit()
-    cursor.close()
-    conexion.close()
+    try:
+        cursor = conexion.cursor(dictionary=True)
+        sql = """
+        SELECT * FROM usuarios
+        WHERE usuario = %s AND clave = %s
+        """
+        cursor.execute(sql, (usuario, clave))
+        return cursor.fetchone()
+    except Exception as e:
+        print("Error al validar usuario:", e)
+        return None
+    finally:
+        cursor.close()
+        conexion.close()

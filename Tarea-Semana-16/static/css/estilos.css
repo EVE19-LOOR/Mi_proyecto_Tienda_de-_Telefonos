@@ -1,12 +1,21 @@
 body {
-    background-color: #f4f6f9;
+    background-color: #f8f9fa;
 }
 
 h2 {
-    font-weight: bold;
-    color: #222;
+    font-weight: 700;
+    color: #1f2937;
 }
 
-.table td, .table th {
+.table th,
+.table td {
     vertical-align: middle;
+}
+
+.btn {
+    border-radius: 8px;
+}
+
+.card {
+    border-radius: 12px;
 }

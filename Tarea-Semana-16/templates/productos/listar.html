@@ -1,102 +1,46 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block titulo %}Listado de celulares{% endblock %}
+{% block title %}Inventario de celulares{% endblock %}
 
-{% block contenido %}
+{% block content %}
+<h2 class="mb-4">Inventario de celulares</h2>
 
-<div class="card p-4">
+<div class="d-flex justify-content-between mb-3">
+    <form method="GET" action="{{ url_for('listar_productos') }}" class="d-flex" style="width:60%">
+        <input type="text" name="q" class="form-control me-2" placeholder="Buscar celular" value="{{ busqueda }}">
+        <button type="submit" class="btn btn-primary me-2">Buscar</button>
+        <a href="{{ url_for('listar_productos') }}" class="btn btn-secondary">Limpiar</a>
+    </form>
 
-<h2>Listado de celulares</h2>
-
-<div class="mb-3">
-
-<a href="{{ url_for('crear_producto_route') }}" class="btn btn-primary">
-➕ Nuevo celular
-</a>
-
-<a href="{{ url_for('generar_pdf_productos') }}" class="btn btn-danger">
-📄 Generar PDF
-</a>
-
+    <a href="{{ url_for('crear_producto') }}" class="btn btn-success">+ Nuevo celular</a>
 </div>
 
-<table class="table table-hover">
-
-<thead>
-<tr>
-<th>ID</th>
-<th>Nombre</th>
-<th>Marca</th>
-<th>Precio</th>
-<th>Stock</th>
-<th>Acciones</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for producto in productos %}
-
-<tr>
-
-<td>{{ producto.id_producto }}</td>
-
-<td>
-<strong>{{ producto.nombre }}</strong>
-</td>
-
-<td>{{ producto.marca }}</td>
-
-<td>
-<span class="badge bg-success">
-${{ producto.precio }}
-</span>
-</td>
-
-<td>
-
-{% if producto.stock > 5 %}
-
-<span class="badge bg-primary">
-{{ producto.stock }}
-</span>
-
-{% else %}
-
-<span class="badge bg-warning">
-{{ producto.stock }}
-</span>
-
-{% endif %}
-
-</td>
-
-<td>
-
-<a href="{{ url_for('editar_producto_route', id_producto=producto.id_producto) }}"
-class="btn btn-warning btn-sm">
-
-✏ Editar
-
-</a>
-
-<a href="{{ url_for('eliminar_producto_route', id_producto=producto.id_producto) }}"
-class="btn btn-danger btn-sm">
-
-🗑 Eliminar
-
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Marca</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td>{{ producto['id_producto'] }}</td>
+            <td>{{ producto['nombre'] }}</td>
+            <td>{{ producto['marca'] }}</td>
+            <td>${{ producto['precio'] }}</td>
+            <td>{{ producto['stock'] }}</td>
+            <td>
+                <a href="{{ url_for('editar_producto', id_producto=producto['id_producto']) }}" class="btn btn-primary btn-sm">Editar</a>
+                <a href="{{ url_for('borrar_producto', id_producto=producto['id_producto']) }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar celular?')">Eliminar</a>
+                <a href="{{ url_for('comprar_producto', id_producto=producto['id_producto']) }}" class="btn btn-success btn-sm">Comprar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
-
-</div>
-
 {% endblock %}

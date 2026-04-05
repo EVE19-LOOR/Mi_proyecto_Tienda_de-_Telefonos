@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de compras{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Reporte de compras</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>ID Compra</th>
+            <th>Cliente</th>
+            <th>Usuario</th>
+            <th>Producto</th>
+            <th>Marca</th>
+            <th>Cantidad</th>
+            <th>Total</th>
+            <th>Fecha</th>
+            <th>PDF</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for compra in compras %}
+        <tr>
+            <td>{{ compra['id_compra'] }}</td>
+            <td>{{ compra['cliente'] }}</td>
+            <td>{{ compra['usuario'] }}</td>
+            <td>{{ compra['producto'] }}</td>
+            <td>{{ compra['marca'] }}</td>
+            <td>{{ compra['cantidad'] }}</td>
+            <td>${{ compra['total'] }}</td>
+            <td>{{ compra['fecha'] }}</td>
+            <td>
+                <a href="{{ url_for('generar_pdf_compra', id_compra=compra['id_compra']) }}" class="btn btn-danger btn-sm" target="_blank">
+                    PDF
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

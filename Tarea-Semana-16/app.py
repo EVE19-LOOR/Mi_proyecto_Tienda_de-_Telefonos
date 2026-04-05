@@ -1,165 +1,217 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
 from services.producto_service import (
-    listar_productos,
+    obtener_productos,
     obtener_producto_por_id,
-    insertar_producto,
+    agregar_producto,
     actualizar_producto,
     eliminar_producto
 )
-from services.usuario_service import validar_usuario, existe_correo, registrar_usuario
-from forms.producto_form import ProductoForm
-from fpdf import FPDF
+from services.usuario_service import registrar_usuario, validar_usuario
+from services.compra_service import registrar_compra, obtener_compra_por_id, obtener_compras
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import io
 
 app = Flask(__name__)
-app.secret_key = "clave_secreta_tienda"
+app.secret_key = "clave_secreta_quinende"
 
-def login_requerido():
-    return "usuario" in session
 
-@app.route("/")
+@app.route('/')
 def inicio():
-    if login_requerido():
-        return redirect(url_for("listar_productos_route"))
-    return redirect(url_for("login"))
+    return redirect(url_for('login'))
 
-@app.route("/login", methods=["GET", "POST"])
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == "POST":
-        correo = request.form["correo"]
-        clave = request.form["clave"]
+    if request.method == 'POST':
+        usuario = request.form['usuario']
+        clave = request.form['clave']
 
-        usuario = validar_usuario(correo, clave)
+        usuario_bd = validar_usuario(usuario, clave)
 
-        if usuario:
-            session["usuario"] = usuario["nombre"]
-            session["correo"] = usuario["correo"]
-            flash("Inicio de sesión correcto.", "success")
-            return redirect(url_for("listar_productos_route"))
+        if usuario_bd:
+            session['usuario'] = usuario_bd['usuario']
+            session['id_usuario'] = usuario_bd['id_usuario']
+            session['nombre'] = usuario_bd['nombre']
+            return redirect(url_for('listar_productos'))
         else:
-            flash("Correo o clave incorrectos.", "danger")
+            flash('Usuario o contraseña incorrectos')
+            return redirect(url_for('login'))
 
-    return render_template("login.html")
+    return render_template('login.html')
 
-@app.route("/logout")
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        usuario = request.form['usuario']
+        clave = request.form['clave']
+
+        exito, mensaje = registrar_usuario(nombre, usuario, clave)
+        flash(mensaje)
+
+        if exito:
+            return redirect(url_for('login'))
+        return redirect(url_for('registro'))
+
+    return render_template('registro.html')
+
+
+@app.route('/logout')
 def logout():
     session.clear()
-    flash("Sesión cerrada correctamente.", "info")
-    return redirect(url_for("login"))
+    return redirect(url_for('login'))
 
-@app.route("/productos")
-def listar_productos_route():
-    if not login_requerido():
-        return redirect(url_for("login"))
 
-    productos = listar_productos()
-    return render_template("productos/listar.html", productos=productos)
+@app.route('/productos')
+def listar_productos():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
 
-@app.route("/productos/crear", methods=["GET", "POST"])
-def crear_producto_route():
-    if not login_requerido():
-        return redirect(url_for("login"))
+    busqueda = request.args.get('q', '')
+    productos = obtener_productos(busqueda)
+    return render_template('productos/listar.html', productos=productos, busqueda=busqueda)
 
-    if request.method == "POST":
-        nombre = request.form["nombre"]
-        marca = request.form["marca"]
-        precio = request.form["precio"]
-        stock = request.form["stock"]
 
-        errores = ProductoForm.validar(nombre, marca, precio, stock)
+@app.route('/productos/crear', methods=['GET', 'POST'])
+def crear_producto():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
 
-        if errores:
-            for error in errores:
-                flash(error, "danger")
-            return render_template("productos/crear.html")
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        marca = request.form['marca']
+        precio = request.form['precio']
+        stock = request.form['stock']
 
-        insertar_producto(nombre, marca, precio, stock)
-        flash("Producto registrado correctamente.", "success")
-        return redirect(url_for("listar_productos_route"))
+        exito, mensaje = agregar_producto(nombre, marca, precio, stock)
+        flash(mensaje)
 
-    return render_template("productos/crear.html")
+        if exito:
+            return redirect(url_for('listar_productos'))
+        return redirect(url_for('crear_producto'))
 
-@app.route("/productos/editar/<int:id_producto>", methods=["GET", "POST"])
-def editar_producto_route(id_producto):
-    if not login_requerido():
-        return redirect(url_for("login"))
+    return render_template('productos/crear.html')
 
-    producto = obtener_producto_por_id(id_producto)
 
-    if not producto:
-        flash("Producto no encontrado.", "danger")
-        return redirect(url_for("listar_productos_route"))
-
-    if request.method == "POST":
-        nombre = request.form["nombre"]
-        marca = request.form["marca"]
-        precio = request.form["precio"]
-        stock = request.form["stock"]
-
-        errores = ProductoForm.validar(nombre, marca, precio, stock)
-
-        if errores:
-            for error in errores:
-                flash(error, "danger")
-            return render_template("productos/editar.html", producto=producto)
-
-        actualizar_producto(id_producto, nombre, marca, precio, stock)
-        flash("Producto actualizado correctamente.", "warning")
-        return redirect(url_for("listar_productos_route"))
-
-    return render_template("productos/editar.html", producto=producto)
-
-@app.route("/productos/eliminar/<int:id_producto>", methods=["GET", "POST"])
-def eliminar_producto_route(id_producto):
-    if not login_requerido():
-        return redirect(url_for("login"))
+@app.route('/productos/editar/<int:id_producto>', methods=['GET', 'POST'])
+def editar_producto(id_producto):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
 
     producto = obtener_producto_por_id(id_producto)
 
     if not producto:
-        flash("Producto no encontrado.", "danger")
-        return redirect(url_for("listar_productos_route"))
+        flash('Celular no encontrado')
+        return redirect(url_for('listar_productos'))
 
-    if request.method == "POST":
-        eliminar_producto(id_producto)
-        flash("Producto eliminado correctamente.", "secondary")
-        return redirect(url_for("listar_productos_route"))
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        marca = request.form['marca']
+        precio = request.form['precio']
+        stock = request.form['stock']
 
-    return render_template("productos/eliminar.html", producto=producto)
+        exito, mensaje = actualizar_producto(id_producto, nombre, marca, precio, stock)
+        flash(mensaje)
 
-@app.route("/productos/pdf")
-def generar_pdf_productos():
-    if not login_requerido():
-        return redirect(url_for("login"))
+        if exito:
+            return redirect(url_for('listar_productos'))
+        return redirect(url_for('editar_producto', id_producto=id_producto))
 
-    productos = listar_productos()
+    return render_template('productos/editar.html', producto=producto)
 
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(190, 10, "Reporte de celulares en tienda", ln=True, align="C")
-    pdf.ln(10)
 
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(20, 10, "ID", 1)
-    pdf.cell(50, 10, "Nombre", 1)
-    pdf.cell(40, 10, "Marca", 1)
-    pdf.cell(40, 10, "Precio", 1)
-    pdf.cell(40, 10, "Stock", 1)
-    pdf.ln()
+@app.route('/productos/eliminar/<int:id_producto>')
+def borrar_producto(id_producto):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
 
-    pdf.set_font("Arial", "", 10)
-    for producto in productos:
-        pdf.cell(20, 10, str(producto["id_producto"]), 1)
-        pdf.cell(50, 10, str(producto["nombre"]), 1)
-        pdf.cell(40, 10, str(producto["marca"]), 1)
-        pdf.cell(40, 10, str(producto["precio"]), 1)
-        pdf.cell(40, 10, str(producto["stock"]), 1)
-        pdf.ln()
+    exito, mensaje = eliminar_producto(id_producto)
+    flash(mensaje)
+    return redirect(url_for('listar_productos'))
 
-    nombre_archivo = "reporte_celulares.pdf"
-    pdf.output(nombre_archivo)
 
-    return send_file(nombre_archivo, as_attachment=True)
+@app.route('/comprar/<int:id_producto>', methods=['GET', 'POST'])
+def comprar_producto(id_producto):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
 
-if __name__ == "__main__":
+    producto = obtener_producto_por_id(id_producto)
+
+    if not producto:
+        flash('Celular no encontrado')
+        return redirect(url_for('listar_productos'))
+
+    if request.method == 'POST':
+        cantidad = int(request.form['cantidad'])
+        id_usuario = session['id_usuario']
+
+        exito, mensaje, id_compra = registrar_compra(id_usuario, id_producto, cantidad)
+        flash(mensaje)
+
+        if exito:
+            return redirect(url_for('generar_pdf_compra', id_compra=id_compra))
+        return redirect(url_for('comprar_producto', id_producto=id_producto))
+
+    return render_template('productos/comprar.html', producto=producto)
+
+
+@app.route('/compras')
+def listar_compras():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+
+    compras = obtener_compras()
+    return render_template('productos/compras.html', compras=compras)
+
+
+@app.route('/compra/pdf/<int:id_compra>')
+def generar_pdf_compra(id_compra):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+
+    compra = obtener_compra_por_id(id_compra)
+
+    if not compra:
+        flash('Compra no encontrada')
+        return redirect(url_for('listar_productos'))
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    pdf.setTitle("Factura_Quinende_Celulares")
+
+    pdf.rect(40, 430, 530, 340)
+
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawString(180, 740, "Quinende Celulares")
+
+    pdf.setFont("Helvetica-Bold", 13)
+    pdf.drawString(50, 710, "Reporte de compra")
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(50, 680, f"Factura N°: {compra['id_compra']}")
+    pdf.drawString(50, 660, f"Cliente: {compra['cliente']}")
+    pdf.drawString(50, 640, f"Usuario comprador: {compra['usuario']}")
+    pdf.drawString(50, 620, f"Celular: {compra['producto']}")
+    pdf.drawString(50, 600, f"Marca: {compra['marca']}")
+    pdf.drawString(50, 580, f"Cantidad comprada: {compra['cantidad']}")
+    pdf.drawString(50, 560, f"Precio unitario: ${compra['precio']}")
+    pdf.drawString(50, 540, f"Total cancelado: ${compra['total']}")
+    pdf.drawString(50, 520, f"Fecha de compra: {compra['fecha']}")
+
+    pdf.line(50, 500, 540, 500)
+    pdf.drawString(50, 475, "Documento generado por el sistema Quinende Celulares.")
+
+    pdf.showPage()
+    pdf.save()
+
+    buffer.seek(0)
+    response = make_response(buffer.read())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename=factura_{id_compra}.pdf'
+    return response
+
+
+if __name__ == '__main__':
     app.run(debug=True)

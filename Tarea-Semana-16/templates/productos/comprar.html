@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Comprar celular{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Comprar celular</h2>
+
+<div class="card p-4 shadow-sm">
+    <p><strong>Cliente:</strong> {{ session['nombre'] }}</p>
+    <p><strong>Usuario:</strong> {{ session['usuario'] }}</p>
+    <hr>
+
+    <p><strong>Nombre:</strong> {{ producto['nombre'] }}</p>
+    <p><strong>Marca:</strong> {{ producto['marca'] }}</p>
+    <p><strong>Precio:</strong> ${{ producto['precio'] }}</p>
+    <p><strong>Stock disponible:</strong> {{ producto['stock'] }}</p>
+
+    {% if producto['stock'] > 0 %}
+    <form method="POST">
+        <div class="mb-3">
+            <label>Cantidad</label>
+            <input type="number" name="cantidad" class="form-control" min="1" max="{{ producto['stock'] }}" required>
+        </div>
+
+        <button type="submit" class="btn btn-success">Confirmar compra</button>
+        <a href="{{ url_for('listar_productos') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+    {% else %}
+        <div class="alert alert-danger">
+            No hay stock disponible para este celular.
+        </div>
+        <a href="{{ url_for('listar_productos') }}" class="btn btn-secondary">Volver</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,32 +1,32 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block titulo %}Registrar celular{% endblock %}
+{% block title %}Nuevo celular{% endblock %}
 
-{% block contenido %}
+{% block content %}
 <h2 class="mb-4">Registrar celular</h2>
 
 <form method="POST">
     <div class="mb-3">
-        <label class="form-label">Nombre del celular</label>
+        <label>Nombre</label>
         <input type="text" name="nombre" class="form-control" required>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Marca</label>
+        <label>Marca</label>
         <input type="text" name="marca" class="form-control" required>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Precio</label>
+        <label>Precio</label>
         <input type="number" step="0.01" name="precio" class="form-control" required>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Stock</label>
-        <input type="number" name="stock" class="form-control" required>
+        <label>Stock</label>
+        <input type="number" name="stock" class="form-control" min="0" required>
     </div>
 
     <button type="submit" class="btn btn-success">Guardar</button>
-    <a href="{{ url_for('listar_productos_route') }}" class="btn btn-secondary">Volver</a>
+    <a href="{{ url_for('listar_productos') }}" class="btn btn-secondary">Cancelar</a>
 </form>
 {% endblock %}
